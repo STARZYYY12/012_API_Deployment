@@ -4,7 +4,7 @@ const { Genre } = require('../models');
 exports.getAllGenre = async (req, res) => {
   try {
     const genres = await Genre.findAll();
-    
+
     return res.status(200).json({
       success: true,
       message: 'Berhasil mengambil semua data genre',
@@ -25,7 +25,6 @@ exports.getGenreById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Validasi: Cek apakah ID berupa angka
     if (isNaN(id)) {
       return res.status(400).json({
         success: false,
@@ -34,8 +33,7 @@ exports.getGenreById = async (req, res) => {
     }
 
     const genre = await Genre.findByPk(id);
-    
-    // Validasi: Cek jika genre tidak ditemukan
+
     if (!genre) {
       return res.status(404).json({
         success: false,
@@ -60,18 +58,16 @@ exports.getGenreById = async (req, res) => {
 // 3. Tambah genre baru (Create)
 exports.createGenre = async (req, res) => {
   try {
-    const { genre } = req.body;
+    const { nama, deskripsi } = req.body;
 
-    // Validasi: Input genre tidak boleh kosong / null / hanya spasi
-    if (!genre || genre.trim() === '') {
+    if (!nama || nama.trim() === '') {
       return res.status(400).json({
         success: false,
         message: 'Nama genre tidak boleh kosong'
       });
     }
 
-    // Validasi: Cek apakah nama genre sudah ada di database (mencegah duplikasi)
-    const existingGenre = await Genre.findOne({ where: { genre: genre.trim() } });
+    const existingGenre = await Genre.findOne({ where: { nama: nama.trim() } });
     if (existingGenre) {
       return res.status(409).json({
         success: false,
@@ -79,8 +75,11 @@ exports.createGenre = async (req, res) => {
       });
     }
 
-    const newGenre = await Genre.create({ genre: genre.trim() });
-    
+    const newGenre = await Genre.create({
+      nama: nama.trim(),
+      deskripsi: deskripsi ? deskripsi.trim() : null
+    });
+
     return res.status(201).json({
       success: true,
       message: 'Genre berhasil ditambahkan',
@@ -99,9 +98,8 @@ exports.createGenre = async (req, res) => {
 exports.updateGenre = async (req, res) => {
   try {
     const { id } = req.params;
-    const { genre } = req.body;
+    const { nama, deskripsi } = req.body;
 
-    // Validasi: Cek apakah ID berupa angka
     if (isNaN(id)) {
       return res.status(400).json({
         success: false,
@@ -109,8 +107,7 @@ exports.updateGenre = async (req, res) => {
       });
     }
 
-    // Validasi: Input genre tidak boleh kosong
-    if (!genre || genre.trim() === '') {
+    if (!nama || nama.trim() === '') {
       return res.status(400).json({
         success: false,
         message: 'Nama genre tidak boleh kosong'
@@ -119,7 +116,6 @@ exports.updateGenre = async (req, res) => {
 
     const existingGenre = await Genre.findByPk(id);
 
-    // Validasi: Cek jika data yang mau di-update tidak ada
     if (!existingGenre) {
       return res.status(404).json({
         success: false,
@@ -127,8 +123,7 @@ exports.updateGenre = async (req, res) => {
       });
     }
 
-    // Validasi: Cek jika nama genre baru ternyata sudah dipakai oleh ID lain
-    const duplicateGenre = await Genre.findOne({ where: { genre: genre.trim() } });
+    const duplicateGenre = await Genre.findOne({ where: { nama: nama.trim() } });
     if (duplicateGenre && duplicateGenre.id !== parseInt(id)) {
       return res.status(409).json({
         success: false,
@@ -136,7 +131,10 @@ exports.updateGenre = async (req, res) => {
       });
     }
 
-    await existingGenre.update({ genre: genre.trim() });
+    await existingGenre.update({
+      nama: nama.trim(),
+      deskripsi: deskripsi ? deskripsi.trim() : existingGenre.deskripsi
+    });
 
     return res.status(200).json({
       success: true,
@@ -157,7 +155,6 @@ exports.deleteGenre = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Validasi: Cek apakah ID berupa angka
     if (isNaN(id)) {
       return res.status(400).json({
         success: false,
@@ -167,7 +164,6 @@ exports.deleteGenre = async (req, res) => {
 
     const genre = await Genre.findByPk(id);
 
-    // Validasi: Cek jika data tidak ditemukan
     if (!genre) {
       return res.status(404).json({
         success: false,
